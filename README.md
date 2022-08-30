@@ -3,7 +3,7 @@
 
 # Installation
 ```shell
-npm install swagger-api --dev
+npm install @tcatche/swagger-api --dev
 ```
 # 生成代码
 
