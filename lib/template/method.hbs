@@ -1,0 +1,30 @@
+
+/**
+* {{&summary}}
+* request: {{&methodName}}
+{{#parameters}}
+{{^isSingleton}} * @param {{&name}} - {{&description}}{{/isSingleton}}
+{{/parameters}}
+*/
+export const {{&methodName}} = function(parameters= {}) {
+    const { $config, $domain, $query, ...body} = parameters
+    let path = '{{&path}}'
+
+{{#parameters}}
+    {{#required}}
+        if(parameters['{{&name}}'] === undefined) {
+            console.warn('Missing required {{&paramType}} parameter: {{&name}}')
+        }
+    {{/required}}
+{{/parameters}}
+
+    return requester.request({
+        method: '{{toLowerCase method}}',
+        host: $domain,
+        path,
+        query: $query,
+        body,
+        config: $config,
+    })
+}
+

@@ -1,0 +1,67 @@
+/* eslint-disable */
+import axios from 'axios'
+import qs from 'qs'
+
+export const axiosInstance = axios.create({
+  timeout: 30000,
+});
+
+export class Requester {
+  constructor($domain, $axiosInstance) {
+    if ($domain) {
+      this.domain = $domain
+    }
+    this.axiosInstance = $axiosInstance || axiosInstance
+  }
+
+  domain = ''
+  axiosInstance = null
+
+  getDomain() {
+    return this.domain
+  }
+  setDomain($domain) {
+    this.domain = $domain
+  }
+  getAxiosInstance() {
+    return this.axiosInstance
+  }
+  setAxiosInstance($axiosInstance) {
+    this.axiosInstance = $axiosInstance
+  }
+  request(requestParams) {
+    const {
+      method,
+      host = this.getDomain(),
+      path,
+      query = {},
+      body = {},
+      config = {},
+    } = requestParams
+    let queryUrl = host + path
+    let urlParams = qs.stringify(query)
+    if (method === 'get') {
+      urlParams = qs.stringify({
+        ...query,
+        ...body,
+      })
+    }
+    if (urlParams) {
+      if (queryUrl.indexOf('?') < 0) {
+        queryUrl = '?' + urlParams
+      } else if (!queryUrl.endsWith('?')) {
+        queryUrl = '&' + urlParams
+      }
+    }
+    if(method === 'post' || method === 'put' || method === 'patch'){
+      return axiosInstance[method](queryUrl, body, config)
+    }
+    if(method === 'get' || method === 'head' || method === 'option') {
+      return axiosInstance[method](queryUrl, config)
+    }
+    if(method === 'delete') {
+      return axiosInstance[method](queryUrl, {...config, data: body || {} })
+    }
+    return Promise.reject(new Error('Not supported request method: ' + method))
+  }
+}
