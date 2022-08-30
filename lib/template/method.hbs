@@ -7,12 +7,30 @@
 {{/parameters}}
 */
 export const {{&methodName}} = function(parameters= {}) {
-    const { $config, $domain, $query, ...body} = parameters
+    const { $config, $domain, $query, ...otherParameters} = parameters
     let path = '{{&path}}'
+    let body = {}
 
 {{#parameters}}
+    {{#isQueryParameter}}
+        if(otherParameters['{{&name}}'] !== undefined) {
+            body['{{&name}}'] = otherParameters['{{&name}}']
+        }
+    {{/isQueryParameter}}
+
+    {{#isBodyParameter}}
+        if(otherParameters['{{&name}}'] !== undefined) {
+            body = otherParameters['{{&name}}']
+        }
+    {{/isBodyParameter}}
+
+    {{#isFormParameter}}
+        if(otherParameters['{{&name}}'] !== undefined) {
+            body['{{&name}}'] = otherParameters['{{&name}}']
+        }
+    {{/isFormParameter}}
     {{#required}}
-        if(parameters['{{&name}}'] === undefined) {
+        if(otherParameters['{{&name}}'] === undefined) {
             console.warn('Missing required {{&paramType}} parameter: {{&name}}')
         }
     {{/required}}

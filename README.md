@@ -9,7 +9,7 @@ npm install @tcatche/swagger-api --dev
 
 ```javascript
 const path = require('path')
-const swaggerGen = require('../index')
+const swaggerGen = require('@tcatche/swagger-api')
 const testJson = require('./test.json')
 // 循环初始化API
 const opt = {

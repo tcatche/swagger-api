@@ -1,6 +1,6 @@
 {
   "name": "@tcatche/swagger-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Swagger to axios api codegen, fork from https://github.com/Lvison/swagger-vue",
   "main": "index.js",
   "repository": {
