@@ -2,66 +2,73 @@
 import axios from 'axios'
 import qs from 'qs'
 
-export const axiosInstance = axios.create({
-  timeout: 30000,
-});
-
-export class Requester {
-  constructor($domain, $axiosInstance) {
+export default class Requester {
+  constructor($domain) {
     if ($domain) {
       this.domain = $domain
     }
-    this.axiosInstance = $axiosInstance || axiosInstance
   }
-
   domain = ''
-  axiosInstance = null
-
-  getDomain() {
-    return this.domain
+  axios = null
+  static commonAxiosInstance = null
+  static initAxios(config = {}) {
+    this.commonAxiosInstance = axios.create(config)
+    return this.commonAxiosInstance
   }
   setDomain($domain) {
     this.domain = $domain
   }
-  getAxiosInstance() {
-    return this.axiosInstance
+  setAxios($axios) {
+    this.axios = $axios
   }
-  setAxiosInstance($axiosInstance) {
-    this.axiosInstance = $axiosInstance
+  checkAxios() {
+    if (!this.axios) {
+      if (!Requester.commonAxiosInstance) {
+        Requester.initAxios()
+      }
+      this.axios = Requester.commonAxiosInstance
+    }
   }
+
   request(requestParams) {
+    this.checkAxios();
     const {
-      method,
+      method = 'get',
       host = this.getDomain(),
       path,
       query = {},
       body = {},
       config = {},
     } = requestParams
-    let queryUrl = host + path
+    let requestMethod = method.toLowerCase()
+    if (!['get', 'post', 'put', 'delete', 'head', 'option', 'patch'].includes(requestMethod.toLowerCase())) {
+      return Promise.reject(new Error('Not supported request method: ' + requestMethod))
+    }
+    let requestUrl = host + path
     let urlParams = qs.stringify(query)
-    if (method === 'get') {
+    if (requestMethod === 'get') {
       urlParams = qs.stringify({
         ...query,
         ...body,
       })
     }
     if (urlParams) {
-      if (queryUrl.indexOf('?') < 0) {
-        queryUrl = '?' + urlParams
-      } else if (!queryUrl.endsWith('?')) {
-        queryUrl = '&' + urlParams
+      if (requestUrl.indexOf('?') < 0) {
+        requestUrl = '?' + urlParams
+      } else if (!requestUrl.endsWith('?')) {
+        requestUrl = '&' + urlParams
       }
     }
-    if(method === 'post' || method === 'put' || method === 'patch'){
-      return axiosInstance[method](queryUrl, body, config)
+    if (requestMethod === 'delete') {
+      return this.axios[requestMethod](requestUrl, {
+        ...config,
+        data: body || {}
+      })
     }
-    if(method === 'get' || method === 'head' || method === 'option') {
-      return axiosInstance[method](queryUrl, config)
+    if (requestMethod === 'post' || requestMethod === 'put' || requestMethod === 'patch') {
+      return this.axios[requestMethod](requestUrl, body, config)
     }
-    if(method === 'delete') {
-      return axiosInstance[method](queryUrl, {...config, data: body || {} })
-    }
-    return Promise.reject(new Error('Not supported request method: ' + method))
+    // requestMethod === 'get' || requestMethod === 'head' || requestMethod === 'option'
+    return this.axios[requestMethod](requestUrl, config)
   }
 }
