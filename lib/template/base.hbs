@@ -34,7 +34,7 @@ export default class Requester {
     this.checkAxios();
     const {
       method = 'get',
-      host = this.getDomain(),
+      host = this.domain,
       path,
       query = {},
       body = {},
