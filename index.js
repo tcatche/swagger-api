@@ -42,13 +42,21 @@ function saveFile (apiContent, outputName) {
  * 根据swagger json描述生成axios请求方法
  * @param {*} opt swagger json数据对象
  */
-function generateApi (swagger, outputName) {
+function generateApi (swaggerOpt, swaggersDir) {
+  const { swagger, fileName } = swaggerOpt
+  if (!swagger) {
+    return
+  }
   function runGenerator (json) {
-    const content = Generator.genApiContent(json)
-    if (outputName) {
-      saveFile(content, outputName)
+    if (fileName) {
+      const content = Generator.genApiContent(json, fileName)
+      const saveFileName = fileName.endsWith('.js') ? fileName : `${fileName}.js`
+      const saveFilePath = path.resolve(swaggersDir, saveFileName)
+      console.log('Generate api file:', saveFilePath)
+      saveFile(content, saveFilePath)
+    } else {
+      console.log('Generate api fileName undefined, not generate!')
     }
-    return content
   }
   if (typeof swagger === 'string' && swagger.startsWith('http')) {
     return apiRequest(swagger).then(runGenerator)
@@ -67,10 +75,11 @@ function generateApis (opts) {
   generateApiBase(opts)
   opts.swaggers.filter(item => !item.ignore)
   .forEach(async (item) => {
-    const fileName = item.fileName.endsWith('.js') ? item.fileName : `${item.fileName}.js`
-    const filePath = path.resolve(opts.swaggersDir, fileName)
-    console.log('Generate api file:', filePath)
-    await generateApi(item.swagger, filePath)
+    await generateApi(item, opts.swaggersDir)
+    // const fileName = item.fileName.endsWith('.js') ? item.fileName : `${item.fileName}.js`
+    // const filePath = path.resolve(opts.swaggersDir, fileName)
+    // console.log('Generate api file:', filePath)
+    // await generateApi(item.swagger, filePath)
   })
 }
 

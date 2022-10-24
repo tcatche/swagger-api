@@ -10,6 +10,7 @@ export default class Requester {
   }
   domain = ''
   axios = null
+  headers = {}
   static commonAxiosInstance = null
   static initAxios(config = {}) {
     this.commonAxiosInstance = axios.create(config)
@@ -17,6 +18,16 @@ export default class Requester {
   }
   setDomain($domain) {
     this.domain = $domain
+  }
+  setHeaders(headers = {}, replace = false) {
+    if (replace) {
+      this.headers = headers;
+    } else {
+      this.headers = {
+        ...this.headers,
+        ...headers,
+      }
+    }
   }
   setAxios($axios) {
     this.axios = $axios
@@ -38,7 +49,9 @@ export default class Requester {
       path,
       query = {},
       body = {},
-      config = {},
+      config = {
+        headers: this.headers,
+      },
     } = requestParams
     let requestMethod = method.toLowerCase()
     if (!['get', 'post', 'put', 'delete', 'head', 'option', 'patch'].includes(requestMethod.toLowerCase())) {
@@ -59,16 +72,23 @@ export default class Requester {
         requestUrl = '&' + urlParams
       }
     }
+    const resuestConfig = {
+      ...config,
+      headers: {
+        ...this.headers,
+        ...(config.headers || {})
+      }
+    }
     if (requestMethod === 'delete') {
       return this.axios[requestMethod](requestUrl, {
-        ...config,
+        ...resuestConfig,
         data: body || {}
       })
     }
     if (requestMethod === 'post' || requestMethod === 'put' || requestMethod === 'patch') {
-      return this.axios[requestMethod](requestUrl, body, config)
+      return this.axios[requestMethod](requestUrl, body, resuestConfig)
     }
     // requestMethod === 'get' || requestMethod === 'head' || requestMethod === 'option'
-    return this.axios[requestMethod](requestUrl, config)
+    return this.axios[requestMethod](requestUrl, resuestConfig)
   }
 }

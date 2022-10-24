@@ -3,5 +3,8 @@ import Requester from './base.js';
 let domain = '{{&domain}}'
 
 export const requester = new Requester(domain)
+requester.setHeades = {
+  serviceName: '{{&fileName}}',
+}
 
 {{> methods }}
