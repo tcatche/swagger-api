@@ -67,9 +67,9 @@ export default class Requester {
     }
     if (urlParams) {
       if (requestUrl.indexOf('?') < 0) {
-        requestUrl = '?' + urlParams
+        requestUrl = requestUrl + '?' + urlParams
       } else if (!requestUrl.endsWith('?')) {
-        requestUrl = '&' + urlParams
+        requestUrl = requestUrl + '&' + urlParams
       }
     }
     const resuestConfig = {
