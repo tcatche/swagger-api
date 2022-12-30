@@ -1,7 +1,5 @@
 /* eslint-disable */
 import axios from 'axios'
-import qs from 'qs'
-
 export default class Requester {
   constructor($domain) {
     if ($domain) {
@@ -40,55 +38,60 @@ export default class Requester {
       this.axios = Requester.commonAxiosInstance
     }
   }
-
-  request(requestParams) {
-    this.checkAxios();
+  checkRequestParams(requestParams) {
     const {
       method = 'get',
-      host = this.domain,
-      path,
-      query = {},
-      body = {},
-      config = {
-        headers: this.headers,
-      },
+        host = this.domain,
+        path,
+        query = {},
+        body = {},
+        config = {
+          headers: this.headers,
+        },
     } = requestParams
     let requestMethod = method.toLowerCase()
-    if (!['get', 'post', 'put', 'delete', 'head', 'option', 'patch'].includes(requestMethod.toLowerCase())) {
-      return Promise.reject(new Error('Not supported request method: ' + requestMethod))
-    }
     let requestUrl = host + path
-    let urlParams = qs.stringify(query)
+    let urlParams = query
     if (requestMethod === 'get') {
-      urlParams = qs.stringify({
+      urlParams = {
         ...query,
         ...body,
-      })
-    }
-    if (urlParams) {
-      if (requestUrl.indexOf('?') < 0) {
-        requestUrl = requestUrl + '?' + urlParams
-      } else if (!requestUrl.endsWith('?')) {
-        requestUrl = requestUrl + '&' + urlParams
       }
     }
-    const resuestConfig = {
+    let resuestOptions = {
       ...config,
+      _originRequestParams: requestParams,
       headers: {
         ...this.headers,
         ...(config.headers || {})
-      }
+      },
+      body,
+      params: urlParams,
     }
     if (requestMethod === 'delete') {
-      return this.axios[requestMethod](requestUrl, {
-        ...resuestConfig,
-        data: body || {}
-      })
+      resuestOptions.data = resuestOptions.body
+      delete resuestOptions.body
     }
-    if (requestMethod === 'post' || requestMethod === 'put' || requestMethod === 'patch') {
-      return this.axios[requestMethod](requestUrl, body, resuestConfig)
+    return {
+      requestMethod,
+      requestUrl,
+      resuestOptions,
+    };
+  }
+  request(requestParams) {
+    this.checkAxios();
+    const {
+      requestMethod,
+      requestUrl,
+      resuestOptions,
+    } = this.checkRequestParams(requestParams);
+    if (!['get', 'post', 'put', 'delete', 'head', 'option', 'patch'].includes(requestMethod)) {
+      return Promise.reject(new Error('Not supported request method: ' + requestMethod))
     }
-    // requestMethod === 'get' || requestMethod === 'head' || requestMethod === 'option'
-    return this.axios[requestMethod](requestUrl, resuestConfig)
+    if (['post', 'put', 'patch'].includes(requestMethod)) {
+      return this.axios[requestMethod](requestUrl, resuestOptions.body, resuestOptions)
+    }
+    // requestMethod === 'get' || requestMethod === 'head' || requestMethod === 'option' || requestMethod === 'delete'
+    return this.axios[requestMethod](requestUrl, resuestOptions)
   }
 }
